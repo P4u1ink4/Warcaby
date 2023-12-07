@@ -12,8 +12,6 @@
 #define BLU   "\x1B[34m"
 #define RESET "\x1B[0m"
 
-
-
 typedef struct {
     int is_empty;
     char piece;
