@@ -9,8 +9,6 @@
 #include <pthread.h>
 #include "board.c"
 
-#define MAX_GAMES 5 // Maksymalna liczba równoległych gier
-
 void init_games();
 void send_board(int socket, int board);
 int check_j(char x);
@@ -148,7 +146,7 @@ void get_possible_moves(int board, char player, int i, int j){
     }
 }
 
-// if there is multiple beat check if we did it correct
+// jesli wystepuje wielokrotne bicie - to sprawdzamy czy ruszamy dobrym pionkiem
 int check_move_from_list(char *client_message, int board, int player){
     for (int i = 0; i < moves_count; i++) {
         if (strcmp(possible_moves[i], client_message) == 0) {
@@ -209,7 +207,7 @@ int check_move_from_list(char *client_message, int board, int player){
     return 0;
 }
 
-// checking if there is available beat that has to be done
+// sprawdzamy czy jest przymusowe bicie
 int check_if_have_beat(int board,int player,char *client_message, char actual_sign){
     char sign_player = ' ';
     char player_queen = ' ';
@@ -262,7 +260,7 @@ int check_if_have_beat(int board,int player,char *client_message, char actual_si
     else{ return 0; }
 }
 
-// checking if it is correct message
+// sprawdzamy czy ruch przekazany przez gracza jest poprawny
 int check_move_validity(char *client_message,int board, int player){
     int i,j,i2,j2;
     
@@ -311,13 +309,12 @@ int check_move_validity(char *client_message,int board, int player){
         return 0;
     }
     
-    // check if player have a pawn that has to make a beat
-    // if he has to and his pawn is incorrect then this move is wrong
+    // sprawdzamy czy istnieje przymusowe bicie, jeśli tak i gracz chciał ruszym innym pionkiem jest niepopranwy ruch
     if( check_if_have_beat(board,player,client_message, actual_sign)==0){
         return 0;
     }
     
-    //pawns beating
+    // bicie pionków
     if(actual_sign=='X' || actual_sign=='O'){
         if(abs(i2 - i)==2){
             if(abs(j2-j)==2){
@@ -406,7 +403,7 @@ int check_move_validity(char *client_message,int board, int player){
         }
     }
     
-    //ruch damek i bicie
+    //ruch damek i bicie damek
     int is_pawn = 0;
     int temp_i,temp_j;
     if(actual_sign=='W' || actual_sign=='B'){
@@ -469,7 +466,7 @@ int check_move_validity(char *client_message,int board, int player){
     return 1;
 }
 
-// checking if there are still some pawns
+// sprawdzanie ile pionków w grze - sprawdzanie wygranej
 int check_for_winner(int board){
     // sprawdzanie szybkie, po dwóch zbitych pionkach
     
@@ -496,7 +493,7 @@ int check_for_winner(int board){
    return 0;
 }
 
-// sending results of someones winning or loosing
+// wysłanie wiadomości odnośnie wygranej lub przegranej
 void send_result(int num_player,int game_state,const int YOU_WON,const int YOU_LOST,int newSocket,int board){
     if ((game_state == 3 && num_player==2) || (game_state==4 && num_player==1)) {
         if ( send(newSocket, &YOU_WON, sizeof(int), 0) < 0 ){
@@ -515,7 +512,7 @@ void send_result(int num_player,int game_state,const int YOU_WON,const int YOU_L
     }
 }
 
-// checking if it is player move or his enemy
+// sprawdzanie którego z graczy jest ruch
 int whos_turn(int turn,int player, const int YOUR_MOVE, const int ENEMY_MOVE, int newSocket){
     if ((turn == 1 && player == 1) || (turn == 2 && player == 2)) {
         if ( send(newSocket, &YOUR_MOVE, sizeof(int), 0) < 0 ){
@@ -532,6 +529,7 @@ int whos_turn(int turn,int player, const int YOUR_MOVE, const int ENEMY_MOVE, in
     }
 }
 
+// sprawdzamy czy gracz na pewno jest aktywny
 int is_connect(int newSocket){
     int active;
     if (recv(newSocket, &active, sizeof(int), 0) < 1) {
@@ -551,7 +549,7 @@ void *socketThread(void *arg){
     long n;
     char client_message[1000];
     
-    // Define constants for messages
+    // definicija const wiadomości game_statów
     const int MISTAKE = -2;
     const int EXIT = -1;
     const int WAIT = 0;
@@ -561,10 +559,10 @@ void *socketThread(void *arg){
     const int YOU_WON = 4;
     const int YOU_LOST = 5;
     
-    // Flags
+    // Flagi
     int turn = 0;
     
-    // Find available game slots where someone is waiting
+    // Sprawdzenie czy jakiś gracz gdzieś nie czeka na przeciwnika, jeśli tak to dołączenie do niego
     for(int i=0; i < MAX_GAMES; i++){
         if (games[i].num_clients == 1 && games[i].can_play==1) {
             games[i].num_clients++;
@@ -575,9 +573,9 @@ void *socketThread(void *arg){
             break;
         }
     }
-    
+
+    // jeśli nikt nie czeka to tworzymy nową grę jeśli jest wolny slot
     if(board==-1){
-        // create new game if there is an empty slot
         for (int i = 0; i < MAX_GAMES; i++) {
             if (games[i].num_clients == 0 && games[i].can_play==1) {
                 games[i].num_clients++;
@@ -601,7 +599,7 @@ void *socketThread(void *arg){
         }
     }
     
-    // Inform client if no available slot
+    // Jeśli nie było wolnego slota do gry to informujemy o tym klienta
     if (board == -1) {
         if ( send(newSocket, &EXIT, sizeof(int), 0) < 0){
             perror("send error");
@@ -610,7 +608,7 @@ void *socketThread(void *arg){
         pthread_exit(NULL);
     }
     
-    // Send information needed to client
+    // Wysyłamy graczowi potrzebne informacje
     if ( send(newSocket, &num_player, sizeof(int), 0) < 0 ){
         perror("send error");
         exit(EXIT_FAILURE);
@@ -620,23 +618,22 @@ void *socketThread(void *arg){
         exit(EXIT_FAILURE);
     }
     
-    
+    // Logika gry, obsluga game_statów
     while (1) {
-        
+
+        // oczekiwanie na gracza
         if (games[board].game_state == 0) {
-            
             if(is_connect(newSocket)==0){
                 break;
             }
-            
             if ( send(newSocket, &WAIT, sizeof(int), 0) < 0 ){
                 perror("send error wait");
                 exit(EXIT_FAILURE);
             }
         }
-        
+
+        // koniec gry
         if (games[board].game_state == 2) {
-            
             if(is_connect(newSocket)==0){
                 break;
             }
@@ -647,31 +644,30 @@ void *socketThread(void *arg){
             }
             break;
         }
-        
+
+        // sprawdzenie wygranej jeśli gra jest w toku
         if (games[board].game_state == 1) {
             games[board].game_state = check_for_winner(board);
         }
-        
+
+        // jeśli wygrana to wysłanie informacji
         if(games[board].game_state==3 || games[board].game_state==4){
-            
             if(is_connect(newSocket)==0){
                 break;
             }
-            
             send_result(num_player,games[board].game_state,YOU_WON,YOU_LOST,newSocket, board);
             break;
         }
-        
+
+        // sprawdzenie kogo tura jeśli gra jest w toku
         if (games[board].game_state == 1) {
-            
             if(is_connect(newSocket)==0){
                 break;
             }
-            
             turn = whos_turn(games[board].turn,num_player, YOUR_MOVE,ENEMY_MOVE, newSocket);
         }
         
-        
+        // jeśli gra jest w toku i jest ruch gracza 
         if (turn == 1 && games[board].game_state==1) {
             send_board(newSocket, board);
             
@@ -681,7 +677,7 @@ void *socketThread(void *arg){
             }
             printf("%s\n", client_message);
             
-            // check if there is multiple beat or if the move is correct
+            // sprawdzamy czy jest wielokrotne bicie i czy ruch jest poprawny
             int checking;
             if (moves_count == 0) {
                 checking = check_move_validity(client_message, board, num_player);
@@ -689,9 +685,9 @@ void *socketThread(void *arg){
                 checking = check_move_from_list(client_message, board, num_player);
             }
             
-            // 1 - good move and ending of turn
-            // 2 - good move and still beating
-            // .. - wrong move
+            // 1 - dobry ruch i koniec ruchu
+            // 2 - dobry ruch i dalsze bicie
+            // .. - zły ruch
             switch(checking){
                 case 1:
                     if ( send(newSocket, &GOOD_MOVE, sizeof(int), 0) < 0 ){
@@ -729,7 +725,8 @@ void *socketThread(void *arg){
     }
     
     printf("Exit socketThread\n");
-    
+
+    // jeśli wyłączenie zostało przerwaniem nagłym, to zmiana game_stat na koniec gry
     if(games[board].game_state==1){
         games[board].game_state = 2;
     }
