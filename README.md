@@ -34,11 +34,11 @@ Kompilacja i uruchomienie odbywa się poprzez terminal otwarty w folderze z odpo
 - Wykorzystuje język C do stworzenia serwera gry w warcaby.
 - Używa socketów do komunikacji sieciowej z klientami.
 - Wielowątkowość zapewnia obsługę wielu gier jednocześnie.
-- Sprawdza poprawność ruchów graczy, informuje klientów o ich turze i reaguje na zakończenie gry.
-- Waliduje ruchy graczy zgodnie z zasadami gry w warcaby.
+- Waliduje ruchy graczy zgodnie z zasadami gry w warcaby, gry turowej.
+- Serwer ma dostępne przygotowane pięć slotów do gry, obsługuję więc zadaną liczbę par graczy, tak aby skupić się na połączeniu między klientem, a serwerem.
 ### Implementacja Klienta
 - Klient również jest napisany w języku C z użyciem socketów do połączenia z serwerem.
-- Udostępnia interfejs dla gracza, aby ten mógł wykonywać ruchy i obserwować stan gry.
+- Klient ma zapewnioną interaktywną rozgrywką, tak aby ten mógł wykonywać ruchy i obserwować stan gry.
 - Wysyła żądania do serwera i odbiera informacje dotyczące ruchów i stanu gry.
 ### Implementacja Modułu Board
 - Moduł board implementuje planszę gry w warcaby.
