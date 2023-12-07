@@ -471,25 +471,29 @@ int check_move_validity(char *client_message,int board, int player){
 
 // checking if there are still some pawns
 int check_for_winner(int board){
-    if(games[board].black_pawns<=10){
-        return 4;
-    }
-    else if(games[board].white_pawns<=10){
-        return 3;
-    }
-    else{
-        return 1;
-    }
-//    if(games[board].black_pawns>0 && games[board].white_pawns>0){
-//        return 1;
-//    }
-//    else if(games[board].black_pawns>0 && games[board].white_pawns==0){
-//        return 3;
-//    }
-//    else if(games[board].black_pawns==0 && games[board].white_pawns>0){
-//        return 4;
-//    }
-//    return 0;
+    // sprawdzanie szybkie, po dwóch zbitych pionkach
+    
+    // if(games[board].black_pawns<=10){
+    //     return 4;
+    // }
+    // else if(games[board].white_pawns<=10){
+    //     return 3;
+    // }
+    // else{
+    //     return 1;
+    // }
+
+    // aktualne sprawdzenie czy gracz wygrał
+   if(games[board].black_pawns>0 && games[board].white_pawns>0){
+       return 1;
+   }
+   else if(games[board].black_pawns>0 && games[board].white_pawns==0){
+       return 3;
+   }
+   else if(games[board].black_pawns==0 && games[board].white_pawns>0){
+       return 4;
+   }
+   return 0;
 }
 
 // sending results of someones winning or loosing
