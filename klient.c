@@ -113,6 +113,7 @@ void your_turn(int clientSocket, int board,int player){
     show_board(player, clientSocket);
     
     printf(GRN "\nIt's your turn!" RESET);
+    
     printf(" Twoje pionki to: " );
     if(player_sign=='O'){
         printf(YEL "%c %c\n" RESET,player_sign,player_queen);
@@ -120,7 +121,9 @@ void your_turn(int clientSocket, int board,int player){
     else{
         printf(BLU "%c %c\n",player_sign,player_queen);
     }
+    
     printf(GRN "Podaj ruch albo wpisz 'exit'\n" RESET);
+    
     scanf("%s",message);
     if(strstr(message,"exit") != NULL)
     {
@@ -175,7 +178,8 @@ void start_game(int player,int clientSocket){
             perror("recv error");
             exit(EXIT_FAILURE);
         }
-        
+
+        // -1 end game 0 wait for player 1 make move 2 wait for enemie's move 4 won 5 lost
         switch(game_stat){
             case -1:
                 close(clientSocket);
