@@ -14,11 +14,11 @@ Kompilacja i uruchomienie odbywa się poprzez terminal otwarty w folderze z odpo
   ```
   ./serwer.out
   ```
-- Kompilacja serwera poprzez użycie komendy
+- Kompilacja klienta poprzez użycie komendy
   ```
   gcc -Wall klient.c -o klient.out
   ```
-- Uruchomienie serwera poprzez użycie komendy
+- Uruchomienie klienta poprzez użycie komendy
   ```
   ./klient.out
   ```
